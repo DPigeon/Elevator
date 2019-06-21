@@ -8,45 +8,73 @@
 
 using namespace std;
 
-Elevator::Elevator(string theStatus, int floorId, int maxFloors, int maxSpeed)
+Elevator::Elevator(string theStatus, int floorId, int maxFloors)
 {
     status = theStatus;
     currentFloor = floorId;
     floors = maxFloors;
-    speed = maxSpeed;
 }
 
-void Elevator::start(int movement)
+void Elevator::addEvent(Event event)
 {
-    clock_t start;
-    int duration;
+    // Look if on the same floor, otherwise wait
+    if (event.getFloor() == currentFloor)
+        elevatorQueue.push(event);
+    else
+        waitQueue.push(event);
 
-    // Every speed * seconds, we increment the floor by 1
-    start = clock();
-    duration = (clock() - start) / (int)CLOCKS_PER_SEC;
-    if (movement < 0)
-        movement = abs(movement);
-    long t = time(0);
+    Elevator::print();
+}
 
-    while (/*some condition here*/)
-
+void Elevator::start()
+{
+    int currentLevel, nextLevel;
+    if (!elevatorQueue.empty())
     {
+        currentLevel = elevatorQueue.front().getFloor();
+        nextLevel = elevatorQueue.front().getNextFloor();
+    }
+    else if (!waitQueue.empty())
+    {
+        currentLevel = waitQueue.front().getFloor();
+        nextLevel = waitQueue.front().getNextFloor();
+    }
+    // Change the status
+    int movement = currentLevel - nextLevel;
+    if (movement < 0)
+    {
+        status = "going up";
+        movement--;
+    }
+    else if (movement > 0)
+    {
+        status = "going down";
+        movement++;
+    }
+    else
+        status = "stopped";
+    // Fix a speed elevator & increment the current floor by 1 according to that speed
+    Elevator::movement(movement, nextLevel);
+}
 
-        if (time(0) > t)
+void Elevator::movement(int movement, int nextLevel)
+{
+    long duration = time(0);
 
+    while (currentFloor != abs(movement))
+    {
+        if (time(0) > duration)
         {
-
-            printf("stuff\n");
-
-            t = time(0);
+            duration = time(0);
+            if (movement > 0)
+                currentFloor--;
+            else if (movement < 0)
+                currentFloor++;
+            Elevator::print();
         }
     }
-
-    do
-    {
-        currentFloor++;
-        Elevator::print();
-    } while (duration == movement * speed);
+    // Stop elevator once reached the desired and closer floor
+    Elevator::stop(nextLevel);
 }
 
 void Elevator::stop(int nextLevel)
@@ -66,38 +94,6 @@ void Elevator::stop(int nextLevel)
         Elevator::movement(nextEvent.getFloor(), 1); // Initialize elevator to first floor
     else
         Elevator::movement(nextEvent.getFloor(), waitingEvent.getFloor()); // Go to next task
-}
-
-void Elevator::movement(int currentLevel, int nextLevel)
-{
-    // Change the status
-    int movement = currentLevel - nextLevel;
-    if (movement < 0)
-        status = "going up";
-    else if (movement > 0)
-        status = "going down";
-    else
-        status = "stopped";
-    Elevator::print();
-    // Fix a speed elevator & increment the current floor by 1 according to that speed
-    Elevator::start(movement);
-
-    // Stop elevator once reached the desired and closer floor
-    Elevator::stop(nextLevel);
-}
-
-void Elevator::addEvent(Event event)
-{
-    // Look if on the same floor, otherwise wait
-    if (event.getFloor() == currentFloor)
-        elevatorQueue.push(event);
-    else
-        waitQueue.push(event);
-
-    Elevator::print();
-
-    // Start the mechanism
-    Elevator::movement(event.getFloor(), event.getNextFloor());
 }
 
 void Elevator::print()

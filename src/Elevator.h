@@ -15,13 +15,12 @@ private:
     string status;              // The Elevator`s status (going up, going down, stopped)
     int currentFloor;           // The level the Elevator is at
     int floors;                 // Number of floors
-    int speed;                  // Any value (the greater, the slower)
 public:
-    Elevator(string status, int currentFloor, int floors, int speed);
-    void start(int);
-    void stop(int nextLevel);
-    void movement(int floor, int nextfloor);
+    Elevator(string status, int currentFloor, int floors);
     void addEvent(Event event);
+    void start();
+    void movement(int movement, int nextLevel);
+    void stop(int nextLevel);
     void print();
     string getStatus();
     int getCurrentFloor();
